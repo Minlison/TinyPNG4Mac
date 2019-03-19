@@ -64,6 +64,11 @@ class DragContainer: NSView {
 		var files = Array<URL>()
 		if let board = sender.draggingPasteboard().propertyList(forType: NSFilenamesPboardType) as? NSArray {
 			for path in board {
+                var isDir : ObjCBool = false
+                if FileManager.default.fileExists(atPath: path as! String, isDirectory: &isDir) && isDir.boolValue {
+                    files.append(contentsOf: findAllTypeFiles(path as? String))
+                    continue
+                }
 				let url = URL(fileURLWithPath: path as! String)
 				let fileExtension = url.pathExtension.lowercased()
 				if acceptTypes.contains(fileExtension) {
@@ -82,13 +87,46 @@ class DragContainer: NSView {
 	func checkExtension(_ draggingInfo: NSDraggingInfo) -> Bool {
         if let board = draggingInfo.draggingPasteboard().propertyList(forType: NSFilenamesPboardType) as? NSArray {
 			for path in board {
-				let url = URL(fileURLWithPath: path as! String)
-				let fileExtension = url.pathExtension.lowercased()
-				if acceptTypes.contains(fileExtension) {
-					return true
-				}
+                var isDir : ObjCBool = false
+                if FileManager.default.fileExists(atPath: path as! String, isDirectory: &isDir) && isDir.boolValue {
+                    return true
+                }
+				return checkPathExtension(path as! String)
 			}
 		}
 		return false
 	}
+    func checkPathExtension(_ path: String) -> Bool {
+        let url = URL(fileURLWithPath: path)
+        let fileExtension = url.pathExtension.lowercased()
+        if acceptTypes.contains(fileExtension) {
+            return true
+        }
+        return false
+    }
+    func findAllTypeFiles(_ dir : String?) -> [URL] {
+        guard let dir = dir else { return [URL]()}
+        var isDirectory: ObjCBool = false
+        // 文件夹
+        var allFiles = [URL]()
+        if dir.hasSuffix(".imageset") || ( FileManager.default.fileExists(atPath: dir, isDirectory: &isDirectory) && isDirectory.boolValue ) {
+            let enumerator = FileManager.default.enumerator(atPath: dir)
+            var isDir: ObjCBool = false
+            while let file = enumerator?.nextObject() {
+                let filePath: String = "\(dir)/\(file)"
+                if FileManager.default.fileExists(atPath: filePath, isDirectory: &isDir) && isDir.boolValue {
+                    allFiles.append(contentsOf: findAllTypeFiles(filePath))
+                } else if filePath.hasSuffix(".imageset") {
+                    allFiles.append(contentsOf: findAllTypeFiles(filePath))
+                } else if checkPathExtension(filePath) {
+                    allFiles.append(URL(fileURLWithPath: filePath))
+                }
+            }
+            return allFiles
+        }
+        if checkPathExtension(dir) {
+            allFiles.append(URL(fileURLWithPath: dir))
+        }
+        return allFiles
+    }
 }

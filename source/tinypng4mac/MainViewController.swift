@@ -127,8 +127,9 @@ class MainViewController: NSViewController, NSOpenSavePanelDelegate, NSTableView
 			}
 			totalSize += task.originSize
 			totalRecudeSize += (task.originSize - task.resultSize)
-			totalReduce.stringValue = String.localizedStringWithFormat(NSLocalizedString("tasks desc", comment: "tasks desc"), TPClient.sharedClient.finishTasksCount, Formator.formatSize(totalRecudeSize), Formator.formatRate(totalRecudeSize / totalSize))
-			
+//            totalReduce.stringValue = String.localizedStringWithFormat(NSLocalizedString("tasks desc", comment: "tasks desc"), TPClient.sharedClient.finishTasksCount, Formator.formatSize(totalRecudeSize), Formator.formatRate(totalRecudeSize / totalSize))
+            // tasks desc with total
+			totalReduce.stringValue = String.localizedStringWithFormat(NSLocalizedString("tasks desc with total", comment: "tasks desc"), TPClient.sharedClient.finishTasksCount/TPClient.sharedClient.queue.size(), Formator.formatSize(totalRecudeSize), Formator.formatRate(totalRecudeSize / totalSize))
 			if TPClient.sharedClient.queue.isEmpty() {
 				// all finished
 				unlockUI()
